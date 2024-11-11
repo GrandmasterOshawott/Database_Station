@@ -18,7 +18,7 @@ CREATE TABLE stop(
 	s_stopid		decimal(9,0) not null,
 	s_routeid		decimal(9,0) not null,
 	s_stopname		char(100) not null,
-	s_stopnumber	char(100) not null
+	s_stopnumber	decimal(9,0) not null
 );
 
 CREATE TABLE route(
@@ -39,9 +39,9 @@ CREATE TABLE path_(
 );
 
 CREATE TABLE roadconditions(
-	rc_roadid		decimal(9,0) not null,
 	rc_pathid		decimal(9,0) not null,
-	rc_clearange	char(100) not null
+	rc_clearange	char(100) not null,
+	rc_comments		char(100) not null
 );
 
 INSERT INTO driver (d_driverid, d_busid, d_subbusid, d_drivername, d_experience, d_status)
