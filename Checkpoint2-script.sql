@@ -62,14 +62,19 @@ INSERT INTO bus (b_busid, b_condition, b_gas)
 	"FUNCTIONAL",
 	60;
 
+UPDATE roadconditions(
+SET p_pathlength = '1', p_gasusage = '2'
+WHERE rc_pathid = '2'
+;)
+
+UPDATE driver(
+SET d_driverid = b_busid
+WHERE d_drivername = '1'
+;)
+
 DROP TABLE IF EXISTS driver;
 DROP TABLE IF EXISTS bus;
 DROP TABLE IF EXISTS stop;
 DROP TABLE IF EXISTS route;
 DROP TABLE IF EXISTS path_;
 DROP TABLE IF EXISTS roadconditions;
-
-UPDATE roadconditions(
-SET p_pathlength = '1', p_gasusage = '2'
-WHERE rc_pathid = '2'
-;)
