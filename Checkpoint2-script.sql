@@ -68,3 +68,8 @@ DROP TABLE IF EXISTS stop;
 DROP TABLE IF EXISTS route;
 DROP TABLE IF EXISTS path_;
 DROP TABLE IF EXISTS roadconditions;
+
+UPDATE roadconditions(
+SET p_pathlength = '1', p_gasusage = '2'
+WHERE rc_pathid = '2'
+;)
