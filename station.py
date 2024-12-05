@@ -27,18 +27,18 @@ def create_tab(conn: sqlite3.Connection):
     """Create tables and populate them with initial data."""
     cur = conn.cursor()
 
-    # Define tables
+    # Define table creation SQLs
     sqls = {
         "stop": """
-        CREATE TABLE IF NOT EXISTS stop (
+        CREATE TABLE IF NOT EXISTS Stops (
             stop_id INTEGER PRIMARY KEY,
             x REAL NOT NULL,
             y REAL NOT NULL,
             stop_name TEXT NOT NULL
         )
         """,
-        "paths": """
-        CREATE TABLE IF NOT EXISTS path (
+        "path": """
+        CREATE TABLE IF NOT EXISTS Paths (
             path_id INTEGER PRIMARY KEY,
             start_stop INTEGER NOT NULL,
             end_stop INTEGER NOT NULL,
@@ -97,32 +97,72 @@ def create_tab(conn: sqlite3.Connection):
 
     # Define initial data
     stop_data = [
-        (1, 0.0, 0.0, "Stop 1"),
-        (2, 0.25, 0.25, "Stop 2"),
-        (3, 0.75, 0.25, "Stop 3"),
-        (4, 0.75, 0.1, "Stop 4"),
-        (5, 0.25, 0.1, "Stop 5"),
-        (6, 0.25, 0.0, "Stop 6")
+        (1, 0.0, 0.2, "Stop 1"),
+        (2, 0.1, 0.2, "Stop 2"),
+        (3, 0.1, 0.3, "Stop 3"),
+        (4, 0.2, 0.3, "Stop 4"),
+        (5, 0.2, 0.1, "Stop 5"),
+        (6, 0.2, 0.0, "Stop 6"),
+        (7, 0.3, 0.0, "Stop 7"),
+        (8, 0.3, 0.1, "Stop 8"),
+        (9, 0.3, 0.4, "Stop 9"),
+        (10, 0.0, 0.4, "Stop 10"),
+        (11, 0.0, 0.5, "Stop 11"),
+        (12, 0.4, 0.5, "Stop 12"),
+        (13, 0.4, 0.4, "Stop 13"),
+        (14, 0.5, 0.4, "Stop 14"),
+        (15, 0.5, 0.3, "Stop 15"),
+        (16, 0.4, 0.3, "Stop 16"),
+        (17, 0.4, 0.1, "Stop 17"),
+        (18, 0.1, 0.0, "Stop 18"),
+        (19, 0.1, 0.1, "Stop 19"),
+        (20, 0.0, 0.0, "Stop 20")
     ]
 
     path_data = [
-        (1, 1, 2, 0.3546, 0.047),
-        (2, 2, 3, 0.5, 0.067),
-        (3, 3, 4, 0.15, 0.02),
-        (4, 4, 5, 0.5, 0.067),
-        (5, 5, 6, 0.1, 0.013),
-        (6, 6, 1, 0.25, 0.033),
-        (7, 2, 5, 0.15, 0.02)
+        (1, 2, 0.1, 0.0),
+        (2, 3, 0.0, 0.1),
+        (3, 4, 0.1, 0.0),
+        (4, 5, 0.0, -0.2),
+        (5, 6, 0.0, -0.1),
+        (6, 7, 0.1, 0.0),
+        (7, 8, 0.0, 0.1),
+        (8, 9, 0.0, 0.3),
+        (9, 10, -0.3, 0.0),
+        (10, 11, 0.0, 0.1),
+        (11, 12, 0.4, 0.0),
+        (12, 13, 0.0, -0.1),
+        (13, 14, 0.1, 0,0),
+        (14, 15, 0,0, -0.1),
+        (15, 16, -0.1, 0,0),
+        (16, 17, 0,0, -0.1),
+        (17, 18, -0.3, 0.0),
+        (18, 19, 0.0, -0.1),
+        (19, 20, -0.1, 0.0),
+        (20, 1, 0.0, 0.2)
     ]
 
     road_conditions_data = [
         (1, "CLEAR", ""),
         (2, "CLEAR", ""),
         (3, "CLEAR", ""),
-        (4, "CLEAR", "Maintenance complete"),
+        (4, "CLEAR", ""),
         (5, "CLEAR", ""),
         (6, "CLEAR", ""),
-        (7, "CLEAR", "")
+        (7, "CLEAR", ""),
+        (8, "CLEAR", ""),
+        (9, "CLEAR", ""),
+        (10, "CLEAR", ""),
+        (11, "CLEAR", ""),
+        (12, "CLEAR", ""),
+        (13, "CLEAR", ""),
+        (14, "CLEAR", ""),
+        (15, "CLEAR", ""),
+        (16, "CLEAR", ""),
+        (17, "CLEAR", ""),
+        (18, "CLEAR", ""),
+        (19, "CLEAR", ""),
+        (20, "CLEAR", "")
     ]
 
     driver_data = [
@@ -136,17 +176,30 @@ def create_tab(conn: sqlite3.Connection):
     ]
 
     route_data = [
-        (1, 1, "Route A", "08:00", "10:00", "Monday"),
-        (2, 2, "Route B", "11:00", "13:00", "Tuesday")
+        (1, 2, "Route A", "09:00", "09:30", "Monday"),
+        (2, 3, "Route B", "09:00", "09:30", "Tuesday")
     ]
 
     routedetails_data = [
-        (1, 1, 1),
-        (1, 2, 2),
-        (1, 3, 3),
-        (2, 4, 1),
-        (2, 5, 2),
-        (2, 6, 3)
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (7, 8),
+        (8, 9),
+        (9, 10),
+        (10, 11),
+        (11, 12),
+        (12, 13),
+        (13, 14),
+        (14, 15),
+        (15, 16),
+        (16, 17),
+        (17, 18),
+        (18, 19),
+        (19, 20),
+        (20, 1)
     ]
 
     # Create and populate tables
