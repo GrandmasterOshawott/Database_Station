@@ -30,7 +30,7 @@ def create_tab(conn: sqlite3.Connection):
     # Define table creation SQLs
     sqls = {
         "stop": """
-        CREATE TABLE IF NOT EXISTS Stops (
+        CREATE TABLE IF NOT EXISTS stop (
             stop_id INTEGER PRIMARY KEY,
             x REAL NOT NULL,
             y REAL NOT NULL,
@@ -38,22 +38,22 @@ def create_tab(conn: sqlite3.Connection):
         )
         """,
         "path": """
-        CREATE TABLE IF NOT EXISTS Paths (
+        CREATE TABLE IF NOT EXISTS path (
             path_id INTEGER PRIMARY KEY,
             start_stop INTEGER NOT NULL,
             end_stop INTEGER NOT NULL,
             distance REAL NOT NULL,
             gas_usage REAL NOT NULL,
-            FOREIGN KEY (start_stop) REFERENCES Stops(stop_id),
-            FOREIGN KEY (end_stop) REFERENCES Stops(stop_id)
+            FOREIGN KEY (start_stop) REFERENCES stop(stop_id),
+            FOREIGN KEY (end_stop) REFERENCES stop(stop_id)
         )
         """,
         "roadconditions": """
-        CREATE TABLE IF NOT EXISTS RoadConditions (
+        CREATE TABLE IF NOT EXISTS roadconditions (
             path_id INTEGER PRIMARY KEY,
             clearance TEXT NOT NULL,
             comments TEXT,
-            FOREIGN KEY (path_id) REFERENCES Paths(path_id)
+            FOREIGN KEY (path_id) REFERENCES path(path_id)
         )
         """,
         "driver": """
@@ -67,14 +67,14 @@ def create_tab(conn: sqlite3.Connection):
         )
         """,
         "bus": """
-        CREATE TABLE IF NOT EXISTS Bus (
+        CREATE TABLE IF NOT EXISTS bus (
             b_busid INTEGER PRIMARY KEY,
             b_condition TEXT NOT NULL,
             b_gas REAL NOT NULL
         )
         """,
         "route": """
-        CREATE TABLE IF NOT EXISTS Route (
+        CREATE TABLE IF NOT EXISTS route (
             r_routeid INTEGER PRIMARY KEY,
             r_busid INTEGER NOT NULL,
             r_routename TEXT NOT NULL,
@@ -84,13 +84,13 @@ def create_tab(conn: sqlite3.Connection):
         )
         """,
         "routedetails": """
-        CREATE TABLE IF NOT EXISTS RouteDetails (
+        CREATE TABLE IF NOT EXISTS routedetails (
             rd_routeid INTEGER NOT NULL,
             rd_stopid INTEGER NOT NULL,
             rd_stopno INTEGER NOT NULL,
             PRIMARY KEY (rd_routeid, rd_stopid),
-            FOREIGN KEY (rd_routeid) REFERENCES Route(r_routeid),
-            FOREIGN KEY (rd_stopid) REFERENCES Stops(stop_id)
+            FOREIGN KEY (rd_routeid) REFERENCES route(r_routeid),
+            FOREIGN KEY (rd_stopid) REFERENCES stop(stop_id)
         )
         """
     }
