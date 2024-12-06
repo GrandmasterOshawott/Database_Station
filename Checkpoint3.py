@@ -356,11 +356,121 @@ def populateTable(_conn):
     """)
 
     # route
-    # Monday
+    # Monday full route 6-8
     cur.execute("""
     INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
     VALUES
-    (1, "MONDAY FULL ROUTE 1", 1, "6:00", "6:15", "MONDAY");
+    (1, "MONDAY FULL ROUTE#01", 1, "6:00", "6:15", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#02", 1, "6:15", "6:30", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#03", 1, "6:30", "6:45", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#04", 1, "6:45", "7:00", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#05", 1, "7:00", "7:15", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#06", 1, "7:15", "7:30", "MONDAY"),
+    (1, "MONDAY FULL ROUTE#07", 1, "7:30", "7:45", "MONDAY");
+    """)
+
+    # Monday full route 8-10
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (2, "MONDAY FULL ROUTE#08", 1, "8:00", "8:15", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#09", 1, "8:15", "8:30", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#10", 1, "8:30", "8:45", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#11", 1, "8:45", "9:00", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#12", 1, "9:00", "9:15", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#13", 1, "9:15", "9:30", "MONDAY"),
+    (2, "MONDAY FULL ROUTE#14", 1, "9:30", "9:45", "MONDAY");
+    """)
+
+    # Monday full route 10-12
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (3, "MONDAY FULL ROUTE#15", 1, "10:00", "10:15", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#16", 1, "10:15", "10:30", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#17", 1, "10:30", "10:45", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#18", 1, "10:45", "11:00", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#19", 1, "11:00", "11:15", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#20", 1, "11:15", "11:30", "MONDAY"),
+    (3, "MONDAY FULL ROUTE#21", 1, "11:30", "11:45", "MONDAY");
+    """)
+
+    # Monday full route 12-14
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (4, "MONDAY FULL ROUTE#22", 1, "12:00", "12:15", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#23", 1, "12:15", "12:30", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#24", 1, "12:30", "12:45", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#25", 1, "12:45", "13:00", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#26", 1, "13:00", "13:15", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#27", 1, "13:15", "13:30", "MONDAY"),
+    (4, "MONDAY FULL ROUTE#28", 1, "13:30", "13:45", "MONDAY");
+    """)
+
+    # Monday full route 14-16
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (5, "MONDAY FULL ROUTE#29", 1, "14:00", "14:15", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#30", 1, "14:15", "14:30", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#31", 1, "14:30", "14:45", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#32", 1, "14:45", "15:00", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#33", 1, "15:00", "15:15", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#34", 1, "15:15", "15:30", "MONDAY"),
+    (5, "MONDAY FULL ROUTE#35", 1, "15:30", "15:45", "MONDAY");
+    """)
+
+    # Monday full route 16-18
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (6, "MONDAY FULL ROUTE#36", 1, "16:00", "16:15", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#37", 1, "16:15", "16:30", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#38", 1, "16:30", "16:45", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#39", 1, "16:45", "17:00", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#40", 1, "17:00", "17:15", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#41", 1, "17:15", "17:30", "MONDAY"),
+    (6, "MONDAY FULL ROUTE#42", 1, "17:30", "17:45", "MONDAY");
+    """)
+
+    # Monday full route 18-20
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (7, "MONDAY FULL ROUTE#43", 1, "18:00", "18:15", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#44", 1, "18:15", "18:30", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#45", 1, "18:30", "18:45", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#46", 1, "18:45", "19:00", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#47", 1, "19:00", "19:15", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#48", 1, "19:15", "19:30", "MONDAY"),
+    (7, "MONDAY FULL ROUTE#49", 1, "19:30", "19:45", "MONDAY");
+    """)
+
+    # Monday full route 20-22
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (8, "MONDAY FULL ROUTE#50", 1, "20:00", "20:15", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#51", 1, "20:15", "20:30", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#52", 1, "20:30", "20:45", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#53", 1, "20:45", "21:00", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#54", 1, "21:00", "21:15", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#55", 1, "21:15", "21:30", "MONDAY"),
+    (8, "MONDAY FULL ROUTE#56", 1, "21:30", "21:45", "MONDAY");
+    """)
+
+    # Monday full route 22-24
+    cur.execute("""
+    INSERT INTO route (r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+    VALUES
+    (9, "MONDAY FULL ROUTE#57", 1, "22:00", "22:15", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#58", 1, "22:15", "22:30", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#59", 1, "22:30", "22:45", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#60", 1, "22:45", "23:00", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#61", 1, "23:00", "23:15", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#62", 1, "23:15", "23:30", "MONDAY"),
+    (9, "MONDAY FULL ROUTE#63", 1, "23:30", "23:45", "MONDAY");
     """)
 
     print("++++++++++++++++++++++++++++++++++")
@@ -372,12 +482,10 @@ def Q1(_conn):
 
     try:
         sql = _conn.execute("""
-        SELECT SUM(p_pathlength)
-        FROM path_
+        SELECT r_starttime, r_endtime
+        FROM route
         
-        JOIN pathdetails ON p_pathid = pd_pathid
-        
-        WHERE pd_routetype = 3
+        WHERE r_routetype = 1
         """)
         table = sql.fetchall()
 
