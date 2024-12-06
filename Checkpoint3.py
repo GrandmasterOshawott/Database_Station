@@ -228,42 +228,6 @@ def populateTable(_conn):
     (1, 1, 24);
     """)
 
-    # Half route A
-    cur.execute("""
-    INSERT INTO stopdetails (sd_routetype, sd_stopid, sd_stopno)
-    VALUES
-    (2, 6, 0),
-    (2, 7, 1),
-    (2, 8, 2),
-    (2, 5, 3),
-    (2, 18, 4),
-    (2, 19, 5),
-    (2, 20, 6),
-    (2, 1, 7),
-    (2, 2, 8),
-    (2, 3, 9),
-    (2, 4, 10),
-    (2, 5, 11),
-    (2, 6, 12);
-    """)
-
-    # Half route A
-    cur.execute("""
-    INSERT INTO stopdetails (sd_routetype, sd_stopid, sd_stopno)
-    VALUES
-    (3, 15, 0),
-    (3, 16, 1),
-    (3, 17, 2),
-    (3, 8, 3),
-    (3, 9, 4),
-    (3, 10, 5),
-    (3, 11, 6),
-    (3, 12, 7),
-    (3, 13, 8),
-    (3, 14, 9),
-    (3, 15, 10);
-    """)
-
     # path
     cur.execute("""
     INSERT INTO path_ (p_startid, p_endid, p_pathlength, p_gasusage)
@@ -319,40 +283,6 @@ def populateTable(_conn):
     (1, 20, 20),
     (1, 21, 21),
     (1, 22, 22);
-    """)
-
-    # Half route A
-    cur.execute("""
-    INSERT INTO pathdetails (pd_routetype, pd_pathid, pd_pathno)
-    VALUES
-    (2, 6, 1),
-    (2, 7, 2),
-    (2, 18, 3),
-    (2, 19, 4),
-    (2, 20, 5),
-    (2, 21, 6),
-    (2, 22, 7),
-    (2, 1, 8),
-    (2, 2, 9),
-    (2, 3, 10),
-    (2, 4, 11),
-    (2, 5, 12);
-    """)
-
-    # Half route B
-    cur.execute("""
-    INSERT INTO pathdetails (pd_routetype, pd_pathid, pd_pathno)
-    VALUES
-    (3, 15, 1),
-    (3, 16, 2),
-    (3, 17, 3),
-    (3, 8, 4),
-    (3, 9, 5),
-    (3, 10, 6),
-    (3, 11, 7),
-    (3, 12, 8),
-    (3, 13, 9),
-    (3, 14, 10);
     """)
 
     # route
@@ -476,20 +406,97 @@ def populateTable(_conn):
     print("++++++++++++++++++++++++++++++++++")
 
 
+# Calculates the distance between two stops
+def calculateDistance(_conn, start, end, routetype):
+    sql = _conn.execute("""
+    SELECT p_pathid, pd_pathno
+    FROM path_
+
+    JOIN pathdetails ON p_pathid = pd_pathid
+
+    WHERE p_startid = """ + str(start) + """
+    AND pd_routetype = """ + str(routetype) + """
+    """)
+    startpath_ = sql.fetchall()
+    startpath = startpath_[0]
+
+    sql = _conn.execute("""
+    SELECT p_pathid, pd_pathno
+    FROM path_
+
+    JOIN pathdetails ON p_pathid = pd_pathid
+
+    WHERE p_endid = """ + str(end) + """
+    AND pd_routetype = """ + str(routetype) + """
+    """)
+    endpath_ = sql.fetchall()
+    endpath = endpath_[0]
+
+    distance = 0
+
+    # Sum all pathlengths for all pathno between the start and end path
+    # If the start path is less than the end path
+    # Calculates the distance normally
+    if (startpath[1] < endpath[1]):
+        for i in range(startpath[1], endpath[1] + 1):
+            sql = _conn.execute("""
+            SELECT p_pathlength
+            FROM path_
+    
+            JOIN pathdetails ON p_pathid = pd_pathid
+    
+            WHERE pd_pathno = """ + str(i) + """
+            AND pd_routetype = """ + str(routetype) + """
+            """)
+            len_ = sql.fetchall()
+            len = len_[0][0]
+            distance += len
+
+    # If the start path is greater than the end path
+    # Calculate the distance from the end to start
+    # But since the bus cannot travel backwards, subtract it from the total route length
+    # Hardcoded to 3.2 for now, which is the length of the full route
+    if (startpath[1] > endpath[1]):
+        for i in range(endpath[1] + 1, startpath[1]):
+            sql = _conn.execute("""
+            SELECT p_pathlength
+            FROM path_
+
+            JOIN pathdetails ON p_pathid = pd_pathid
+
+            WHERE pd_pathno = """ + str(i) + """
+            AND pd_routetype = """ + str(routetype) + """
+            """)
+            len_ = sql.fetchall()
+            len = len_[0][0]
+            distance += len
+        print(distance)
+        distance = 3.2 - distance
+
+    print(distance)
+    return distance
+
+
 def Q1(_conn):
     print("++++++++++++++++++++++++++++++++++")
     print("Q1")
 
     try:
+        output = open('output/1.out', 'w')
         sql = _conn.execute("""
         SELECT r_starttime, r_endtime
         FROM route
-        
+
         WHERE r_routetype = 1
         """)
         table = sql.fetchall()
 
-        print(table)
+        header = "{:<20} {:<20}"
+        output.write((header.format("start time", "end time")) + '\n')
+        for i in range(0, len(table)):
+            output.write((header.format(str(table[i][0]), str(table[i][1]))) + '\n')
+
+        output.close()
     except Error as e:
         print(e)
 
@@ -506,7 +513,9 @@ def main():
         createTable(conn)
         populateTable(conn)
 
-        Q1(conn)
+        #Q1(conn)
+        # Calculate distance from stop A to stop B on the full route
+        calculateDistance(conn, 3, 5, 1)
 
     closeConnection(conn, database)
 
