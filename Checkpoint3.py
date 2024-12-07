@@ -1,5 +1,6 @@
 import sqlite3
 from sqlite3 import Error
+import datetime
 
 # Database functions
 # Open connection
@@ -455,7 +456,7 @@ def calculateDistance(_conn, start, end, routetype):
     # If the start path is greater than the end path
     # Calculate the distance from the end to start
     # But since the bus cannot travel backwards, subtract it from the total route length
-    # Hardcoded to 3.2 for now, which is the length of the full route
+    # Currently hardcoded to 3.2, which is the length of the full route
     if (startpath[1] > endpath[1]):
         for i in range(endpath[1] + 1, startpath[1]):
             sql = _conn.execute("""
@@ -470,11 +471,166 @@ def calculateDistance(_conn, start, end, routetype):
             len_ = sql.fetchall()
             len = len_[0][0]
             distance += len
-        print(distance)
+        #print(distance)
         distance = 3.2 - distance
 
-    print(distance)
+    #print(distance)
     return distance
+
+
+# Calculates the time in minutes it should take to travel from one stop to another
+def calculateTime(_conn, start, end, routetype):
+    distance = calculateDistance(_conn, start, end, routetype)
+
+    # Time is based on the mpm (miles per minute), which is dependent on routetype
+    # Full route
+    if (routetype == 1):
+        mpm = 3.2 / 15
+
+    time = distance / mpm
+    return time
+
+
+# Converts a time string to hours and minutes
+def processTime(time):
+    time_ = datetime.datetime.strptime(time, "%H:%M")
+    return time_.hour, time_.minute
+
+
+# Rounds a time "down" to match route times
+# Example: 13 rounds down to 0, 17 rounds down to 15
+def roundTime(time):
+    hours, minutes = processTime(time)
+
+    if (minutes < 15):
+        minutes_ = "00"
+
+    elif (minutes < 30):
+        minutes_ = "15"
+
+    elif (minutes < 45):
+        minutes_ = "30"
+
+    elif (minutes < 60):
+        minutes_ = "45"
+
+    return str(hours) + ":" + minutes_
+
+
+# Finds the time that the bus will arrive at the starting stop and ending stop.
+def findRoute(_conn, start, end, routetype, time, day):
+    checkHours, checkMinutes = processTime(time)
+    # If the time is past midnight and before 6:00 AM
+    if (checkHours >= 0 and checkHours < 6):
+        print("Sorry, you must wait until tomorrow.")
+        return 0
+
+    # If the time is during a maintenance period
+    if (checkHours % 2 == 1 and checkMinutes >= 45):
+        print("Sorry, you must wait extra due to the maintenance period.")
+        checkMinutes += 15
+        # If minutes exceeds 59
+        if (checkMinutes > 59):
+            checkMinutes -= 60
+            checkHours += 1
+            if (checkHours == 24):
+                checkHours = 0
+        if (checkMinutes < 10):
+            minutes = "0" + str(checkMinutes)
+        time = str(checkHours) + ":" + str(checkMinutes)
+
+    # Find the routes with the specified routetype, day, and start time before the current time
+    time_ = roundTime(time)
+    params = (day, time_,)
+    sql = _conn.execute("""
+    SELECT r_routeid, r_starttime, r_endtime
+    FROM route
+
+    WHERE r_routetype = """ + str(routetype) + """
+    AND r_day = ?
+    AND r_starttime = ?
+    """, params)
+    routes = sql.fetchall()
+
+    # Calculate the time to reach stops
+    # Time it will take to reach the start
+    if (start == 1):
+        travelStart = 0
+    elif (start != 1):
+        travelStart = round(calculateTime(_conn, 1, start, routetype))
+
+    # Time it will take to reach the end after reaching the start
+    travelEnd = round(calculateTime(_conn, start, end, routetype))
+
+    # Estimate the time the bus will arrive
+    startHours, startMinutes = processTime(routes[0][1])
+    startMinutes += travelStart
+
+    # Convert back to string
+    # If the expected start has already passed
+    if (startMinutes < checkMinutes):
+        startMinutes += 15
+    # If minutes exceeds 59
+    if (startMinutes > 59):
+        startMinutes -= 60
+        startHours += 1
+        if (startHours == 24):
+            startHours = 0
+    if (startMinutes < 10):
+        startMinutes = "0" + str(startMinutes)
+    arrival = str(startHours) + ":" + str(startMinutes)
+
+    # Estimate the time the bus will reach the destination
+    endHours, endMinutes = processTime(arrival)
+    endMinutes += travelEnd
+
+    # Convert back to string
+    # If minutes exceeds 59
+    if (endMinutes > 59):
+        endMinutes -= 60
+        endHours += 1
+        if (endHours == 24):
+            endHours = 0
+    if (endMinutes < 10):
+        endMinutes = "0" + str(endMinutes)
+    destination = str(endHours) + ":" + str(endMinutes)
+
+    # Another check for invalid times
+    # If the time is during a maintenance period
+    if (endHours % 2 == 1 and endMinutes >= 45):
+        startMinutes += 30
+        endMinutes += 30
+        # If startMinutes exceeds 59
+        if (startMinutes > 59):
+            startMinutes -= 60
+            startHours += 1
+            if (startHours == 24):
+                startHours = 0
+        if (startMinutes < 10):
+            startMinutes = "0" + str(startMinutes)
+        # If endMinutes exceeds 59
+        if (endMinutes > 59):
+            endMinutes -= 60
+            endHours += 1
+            if (endHours == 24):
+                endHours = 0
+        if (endMinutes < 10):
+            endMinutes = "0" + str(endMinutes)
+        # Reassign arrival and destination
+        arrival = str(startHours) + ":" + str(startMinutes)
+        destination = str(endHours) + ":" + str(endMinutes)
+
+        # If the updated time is past midnight and before 6:00 AM
+        if (endHours >= 0 and endHours < 6):
+            print("Sorry, you must wait until tomorrow.")
+            return 0
+        else:
+            print("Sorry, you must wait extra due to the maintenance period.")
+
+    # Print message
+    print("A bus should arrive at your position by " + arrival + ". You should reach your destination by " + destination + ".")
+
+    return 0
 
 
 def Q1(_conn):
@@ -516,6 +672,10 @@ def main():
         #Q1(conn)
         # Calculate distance from stop A to stop B on the full route
         calculateDistance(conn, 3, 5, 1)
+        # Calculate distance from stop A to stop B on the full route
+        calculateTime(conn, 3, 5, 1)
+        # Find route
+        findRoute(conn, 10, 5, 1, "23:23", "MONDAY")
 
     closeConnection(conn, database)
 
