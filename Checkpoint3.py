@@ -520,10 +520,6 @@ def roundTime(time):
 # Finds the time that the bus will arrive at the starting stop and ending stop.
 def findRoute(_conn, start, end, routetype, time, day):
     checkHours, checkMinutes = processTime(time)
-    # If the time is past midnight and before 6:00 AM
-    if (checkHours >= 0 and checkHours < 6):
-        print("Sorry, you must wait until tomorrow.")
-        return 0
 
     # If the time is during a maintenance period
     if (checkHours % 2 == 1 and checkMinutes >= 45):
@@ -536,8 +532,15 @@ def findRoute(_conn, start, end, routetype, time, day):
             if (checkHours == 24):
                 checkHours = 0
         if (checkMinutes < 10):
-            minutes = "0" + str(checkMinutes)
-        time = str(checkHours) + ":" + str(checkMinutes)
+            checkMinutes_ = "0" + str(checkMinutes)
+        else:
+            checkMinutes_ = checkMinutes
+        time = str(checkHours) + ":" + str(checkMinutes_)
+
+    # If the time is past midnight and before 6:00 AM
+    if (checkHours >= 0 and checkHours < 6):
+        print("Sorry, you must wait until tomorrow.")
+        return 0
 
     # Find the routes with the specified routetype, day, and start time before the current time
     time_ = roundTime(time)
@@ -577,8 +580,10 @@ def findRoute(_conn, start, end, routetype, time, day):
         if (startHours == 24):
             startHours = 0
     if (startMinutes < 10):
-        startMinutes = "0" + str(startMinutes)
-    arrival = str(startHours) + ":" + str(startMinutes)
+        startMinutes_ = "0" + str(startMinutes)
+    else:
+        startMinutes_ = startMinutes
+    arrival = str(startHours) + ":" + str(startMinutes_)
 
     # Estimate the time the bus will reach the destination
     endHours, endMinutes = processTime(arrival)
@@ -592,14 +597,16 @@ def findRoute(_conn, start, end, routetype, time, day):
         if (endHours == 24):
             endHours = 0
     if (endMinutes < 10):
-        endMinutes = "0" + str(endMinutes)
-    destination = str(endHours) + ":" + str(endMinutes)
+        endMinutes_ = "0" + str(endMinutes)
+    else:
+        endMinutes_ = endMinutes
+    destination = str(endHours) + ":" + str(endMinutes_)
 
     # Another check for invalid times
     # If the time is during a maintenance period
-    if (endHours % 2 == 1 and endMinutes >= 45):
-        startMinutes += 30
-        endMinutes += 30
+    if (startHours % 2 == 1 and startMinutes >= 45) or (endHours % 2 == 1 and endMinutes >= 45):
+        startMinutes += 15
+        endMinutes += 15
         # If startMinutes exceeds 59
         if (startMinutes > 59):
             startMinutes -= 60
@@ -607,7 +614,9 @@ def findRoute(_conn, start, end, routetype, time, day):
             if (startHours == 24):
                 startHours = 0
         if (startMinutes < 10):
-            startMinutes = "0" + str(startMinutes)
+            startMinutes_ = "0" + str(startMinutes)
+        else:
+            startMinutes_ = startMinutes
         # If endMinutes exceeds 59
         if (endMinutes > 59):
             endMinutes -= 60
@@ -615,10 +624,12 @@ def findRoute(_conn, start, end, routetype, time, day):
             if (endHours == 24):
                 endHours = 0
         if (endMinutes < 10):
-            endMinutes = "0" + str(endMinutes)
+            endMinutes_ = "0" + str(endMinutes)
+        else:
+            endMinutes_ = endMinutes
         # Reassign arrival and destination
-        arrival = str(startHours) + ":" + str(startMinutes)
-        destination = str(endHours) + ":" + str(endMinutes)
+        arrival = str(startHours) + ":" + str(startMinutes_)
+        destination = str(endHours) + ":" + str(endMinutes_)
 
         # If the updated time is past midnight and before 6:00 AM
         if (endHours >= 0 and endHours < 6):
@@ -671,11 +682,12 @@ def main():
 
         #Q1(conn)
         # Calculate distance from stop A to stop B on the full route
-        calculateDistance(conn, 3, 5, 1)
+        #calculateDistance(conn, 3, 5, 1)
         # Calculate distance from stop A to stop B on the full route
-        calculateTime(conn, 3, 5, 1)
+        #print(calculateTime(conn, 10, 5, 1))
         # Find route
-        findRoute(conn, 10, 5, 1, "23:23", "MONDAY")
+        #findRoute(conn, 1, 5, 1, "23:45", "MONDAY")
+        findRoute(conn, 10, 5, 1, "23:22", "MONDAY")
 
     closeConnection(conn, database)
 
