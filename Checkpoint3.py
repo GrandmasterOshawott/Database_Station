@@ -575,6 +575,72 @@ def updateBus(_conn, bus_id, condition_update):
         return "Bus not found. Condition update failed."
 
 
+def showAlerts(_conn):
+    sql = _conn.execute("""
+    SELECT d_drivername, d_status
+    FROM driver
+    WHERE d_status != 'ABLE'
+    """)
+    drivers = sql.fetchall()
+
+    sql = _conn.execute("""
+    SELECT b_busname, b_condition
+    FROM bus
+    WHERE b_condition != 'FUNCTIONAL'
+    """)
+    buses = sql.fetchall()
+
+    alerts = []
+
+    # If there are any drivers with status other than 'ABLE'
+    if drivers:
+        for driver in drivers:
+            alerts.append(f"{driver[0]} is unable to work. Reason: {driver[1]}.")
+
+    # If there are any buses not 'FUNCTIONAL'
+    if buses:
+        for bus in buses:
+            alerts.append(f"{bus[0]} is out of service. Reason: {bus[1]}.")
+
+    # If no alerts exist
+    if not alerts:
+        alerts.append("There are no alerts at this time.")
+
+    # Return the alerts as a message
+    return "\n".join(alerts)
+
+
+def showRequests(_conn):
+    sql = _conn.execute("""
+    SELECT d_drivername, d_subid
+    FROM driver
+    WHERE d_subid != 0
+    """)
+    requests = sql.fetchall()
+
+    if requests:
+        request_messages = []
+        for request in requests:
+            driver_name = request[0]
+            substitute_driver_id = request[1]
+
+            # Fetch the name of the driver being substituted
+            sub_driver_sql = _conn.execute("""
+            SELECT d_drivername
+            FROM driver
+            WHERE d_driverid = ?
+            """, (substitute_driver_id,))
+            substitute_driver = sub_driver_sql.fetchall()
+
+            if substitute_driver:
+                substitute_driver_name = substitute_driver[0][0]
+                request_messages.append(f"{driver_name} has requested to fill in for {substitute_driver_name}.")
+
+        return "\n".join(request_messages)
+    else:
+        return "There are no requests at this time."
+
+
 
 
 def Q1(_conn):
