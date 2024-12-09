@@ -852,6 +852,41 @@ def reassignBus(_conn, old_bus_id, new_bus_id):
         return "Invalid update request."
 
 
+def restoreBus(_conn):
+    try:
+        # Clear all current entries in the route table
+        _conn.execute("""
+        DELETE FROM route
+        """)
+
+        # Reinsert default route values into the `route` table
+        default_routes = [
+            (1, 101, 'Full Route', 1, '06:00', '20:00', 'Weekday'),
+            (2, 102, 'Half Route A', 2, '06:00', '20:00', 'Weekday'),
+            (3, 103, 'Half Route B', 3, '06:00', '20:00', 'Weekday')
+        ]  # Example data - adjust this to your schema's default configuration.
+        
+        _conn.executemany("""
+        INSERT INTO route (r_routeid, r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, default_routes)
+
+        # Reset all drivers to their default bus assignments and clear substitute values
+        _conn.execute("""
+        UPDATE driver
+        SET d_busid = d_driverid + 100,  -- Default assignment logic (e.g., driver ID + offset)
+            d_subid = 0,                -- Reset substitute driver assignment
+            d_subbusid = 0              -- Reset substitute bus assignment
+        """)
+
+        print("Successfully reset routes and drivers to their default assigned buses.")
+        return "Successfully reset routes and drivers to their default assigned buses."
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return "Failed to reset routes and drivers."
+
+
 
 def Q1(_conn):
     print("++++++++++++++++++++++++++++++++++")
