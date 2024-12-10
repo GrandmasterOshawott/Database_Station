@@ -250,8 +250,6 @@ def populateTable(_conn):
     (15, 16, 0.1, 0.0133),
     (16, 17, 0.2, 0.0266),
     (17, 8, 0.1, 0.0133),
-    (8, 5, 0.1, 0.0133),
-    (5, 18, 0.1, 0.0133),
     (18, 19, 0.1, 0.0133),
     (19, 20, 0.1, 0.0133),
     (20, 1, 0.2, 0.0266);
@@ -281,9 +279,7 @@ def populateTable(_conn):
     (1, 17, 17),
     (1, 18, 18),
     (1, 19, 19),
-    (1, 20, 20),
-    (1, 21, 21),
-    (1, 22, 22);
+    (1, 20, 20);
     """)
 
     # route
@@ -457,7 +453,7 @@ def calculateDistance(_conn, start, end, routetype):
     # Calculate the distance from the end to start
     # But since the bus cannot travel backwards, subtract it from the total route length
     # Currently hardcoded to 3.2, which is the length of the full route
-    if (startpath[1] > endpath[1]):
+    elif (startpath[1] > endpath[1]):
         for i in range(endpath[1] + 1, startpath[1]):
             sql = _conn.execute("""
             SELECT p_pathlength
@@ -483,7 +479,7 @@ def calculateTime(_conn, start, end, routetype):
     distance = calculateDistance(_conn, start, end, routetype)
 
     # Time is based on the mpm (miles per minute), which is dependent on routetype
-    # Full route
+    # Full route is 3.2 miles long and takes 15 minutes to complete
     if (routetype == 1):
         mpm = 3.2 / 15
 
@@ -523,7 +519,9 @@ def findRoute(_conn, start, end, routetype, time, day):
 
     # If the time is during a maintenance period
     if (checkHours % 2 == 1 and checkMinutes >= 45):
-        print("Sorry, you must wait extra due to the maintenance period.")
+        # Prevents overlap with non operational hours message
+        if (checkHours != 23):
+            print("Sorry, you must wait extra due to the maintenance period.")
         checkMinutes += 15
         # If minutes exceeds 59
         if (checkMinutes > 59):
@@ -539,7 +537,7 @@ def findRoute(_conn, start, end, routetype, time, day):
 
     # If the time is past midnight and before 6:00 AM
     if (checkHours >= 0 and checkHours < 6):
-        print("Sorry, you must wait until tomorrow.")
+        print("Sorry, you must wait until the station opens again.")
         return 0
 
     # Find the routes with the specified routetype, day, and start time before the current time
@@ -633,7 +631,7 @@ def findRoute(_conn, start, end, routetype, time, day):
 
         # If the updated time is past midnight and before 6:00 AM
         if (endHours >= 0 and endHours < 6):
-            print("Sorry, you must wait until tomorrow.")
+            print("Sorry, you must wait until the station opens again.")
             return 0
         else:
             print("Sorry, you must wait extra due to the maintenance period.")
@@ -644,28 +642,138 @@ def findRoute(_conn, start, end, routetype, time, day):
     return 0
 
 
+# Normal forward stop
 def Q1(_conn):
     print("++++++++++++++++++++++++++++++++++")
     print("Q1")
 
-    try:
-        output = open('output/1.out', 'w')
-        sql = _conn.execute("""
-        SELECT r_starttime, r_endtime
-        FROM route
+    start = 1
+    end = 5
+    routetype = 1
+    time = "6:00"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
 
-        WHERE r_routetype = 1
-        """)
-        table = sql.fetchall()
+    print("++++++++++++++++++++++++++++++++++")
 
-        header = "{:<20} {:<20}"
-        output.write((header.format("start time", "end time")) + '\n')
-        for i in range(0, len(table)):
-            output.write((header.format(str(table[i][0]), str(table[i][1]))) + '\n')
+# Normal forward stop with double distance as Q1
+def Q2(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q2")
 
-        output.close()
-    except Error as e:
-        print(e)
+    start = 2
+    end = 9
+    routetype = 1
+    time = "6:00"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Backward stop
+def Q3(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q3")
+
+    start = 8
+    end = 7
+    routetype = 1
+    time = "6:01"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Maintenance
+def Q4(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q4")
+
+    start = 1
+    end = 5
+    routetype = 1
+    time = "7:45"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Too late
+def Q5(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q5")
+
+    start = 1
+    end = 5
+    routetype = 1
+    time = "23:45"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Too late and backward stop
+def Q6(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q6")
+
+    start = 5
+    end = 2
+    routetype = 1
+    time = "23:30"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Q6 an hour earlier
+def Q7(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q7")
+
+    start = 5
+    end = 2
+    routetype = 1
+    time = "22:30"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Barely making it
+def Q8(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q8")
+
+    start = 5
+    end = 2
+    routetype = 1
+    time = "23:17"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
+
+    print("++++++++++++++++++++++++++++++++++")
+
+# Barely missing it
+def Q9(_conn):
+    print("++++++++++++++++++++++++++++++++++")
+    print("Q9")
+
+    start = 5
+    end = 2
+    routetype = 1
+    time = "23:18"
+    day = "MONDAY"
+    print("At " + time + ", from stop " + str(start) + " to " + str(end) + ":")
+    findRoute(_conn, start, end, routetype, time, day)
 
     print("++++++++++++++++++++++++++++++++++")
 
@@ -680,14 +788,16 @@ def main():
         createTable(conn)
         populateTable(conn)
 
-        #Q1(conn)
-        # Calculate distance from stop A to stop B on the full route
-        #calculateDistance(conn, 3, 5, 1)
-        # Calculate distance from stop A to stop B on the full route
-        #print(calculateTime(conn, 10, 5, 1))
-        # Find route
-        #findRoute(conn, 1, 5, 1, "23:45", "MONDAY")
-        findRoute(conn, 10, 5, 1, "23:22", "MONDAY")
+        # Testing function features
+        Q1(conn)
+        Q2(conn)
+        Q3(conn)
+        Q4(conn)
+        Q5(conn)
+        Q6(conn)
+        Q7(conn)
+        Q8(conn)
+        Q9(conn)
 
     closeConnection(conn, database)
 
