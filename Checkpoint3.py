@@ -575,6 +575,317 @@ def updateBus(_conn, bus_id, condition_update):
         return "Bus not found. Condition update failed."
 
 
+def showAlerts(_conn):
+    sql = _conn.execute("""
+    SELECT d_drivername, d_status
+    FROM driver
+    WHERE d_status != 'ABLE'
+    """)
+    drivers = sql.fetchall()
+
+    sql = _conn.execute("""
+    SELECT b_busname, b_condition
+    FROM bus
+    WHERE b_condition != 'FUNCTIONAL'
+    """)
+    buses = sql.fetchall()
+
+    alerts = []
+
+    # If there are any drivers with status other than 'ABLE'
+    if drivers:
+        for driver in drivers:
+            alerts.append(f"{driver[0]} is unable to work. Reason: {driver[1]}.")
+
+    # If there are any buses not 'FUNCTIONAL'
+    if buses:
+        for bus in buses:
+            alerts.append(f"{bus[0]} is out of service. Reason: {bus[1]}.")
+
+    # If no alerts exist
+    if not alerts:
+        alerts.append("There are no alerts at this time.")
+
+    # Return the alerts as a message
+    return "\n".join(alerts)
+
+
+def showRequests(_conn):
+    sql = _conn.execute("""
+    SELECT d_drivername, d_subid
+    FROM driver
+    WHERE d_subid != 0
+    """)
+    requests = sql.fetchall()
+
+    if requests:
+        request_messages = []
+        for request in requests:
+            driver_name = request[0]
+            substitute_driver_id = request[1]
+
+            # Fetch the name of the driver being substituted
+            sub_driver_sql = _conn.execute("""
+            SELECT d_drivername
+            FROM driver
+            WHERE d_driverid = ?
+            """, (substitute_driver_id,))
+            substitute_driver = sub_driver_sql.fetchall()
+
+            if substitute_driver:
+                substitute_driver_name = substitute_driver[0][0]
+                request_messages.append(f"{driver_name} has requested to fill in for {substitute_driver_name}.")
+
+        return "\n".join(request_messages)
+    else:
+        return "There are no requests at this time."
+
+
+def mySchedule(_conn, driver_id):
+    # Fetch the primary schedule for the driver
+    sql = _conn.execute(f"""
+    SELECT d_drivername, r_day, r_starttime, r_endtime
+    FROM driver
+    JOIN route ON driver.d_busid = route.r_busid
+    WHERE d_driverid = {driver_id}
+    AND d_subid = 0
+    """)
+    primary_schedule = sql.fetchall()
+    
+    # Fetch substitute schedule if applicable
+    sql = _conn.execute(f"""
+    SELECT d_drivername, r_day, r_starttime, r_endtime
+    FROM driver
+    JOIN route ON driver.d_subbusid = route.r_busid
+    WHERE d_driverid = {driver_id}
+    AND d_subid != 0
+    """)
+    substitute_schedule = sql.fetchall()
+    
+    if not primary_schedule and not substitute_schedule:
+        return f"No schedule found for driver ID {driver_id}."
+    
+    schedule_output = []
+    # Add primary schedule details
+    if primary_schedule:
+        schedule_output.append("Primary schedule:")
+        for record in primary_schedule:
+            driver_name, day, start_time, end_time = record
+            schedule_output.append(f"  - {day}: {start_time} to {end_time}")
+    
+    # Add substitute schedule details
+    if substitute_schedule:
+        schedule_output.append("Substitute schedule:")
+        for record in substitute_schedule:
+            driver_name, day, start_time, end_time = record
+            schedule_output.append(f"  - {day}: {start_time} to {end_time}")
+    
+    # Format the final schedule output
+    result = f"Your schedule is:\n" + "\n".join(schedule_output)
+    return result
+
+
+def requestDriver(_conn, user_driver_id, target_driver_id):
+    # Fetch the user driver's information
+    sql = _conn.execute(f"""
+    SELECT d_drivername, d_type, d_subid
+    FROM driver
+    WHERE d_driverid = {user_driver_id}
+    """)
+    user_driver_info = sql.fetchone()
+    
+    # Fetch the target driver's information
+    sql = _conn.execute(f"""
+    SELECT d_drivername, d_type
+    FROM driver
+    WHERE d_driverid = {target_driver_id}
+    """)
+    target_driver_info = sql.fetchone()
+    
+    # Validate that both drivers exist
+    if not user_driver_info:
+        return f"Driver ID {user_driver_id} does not exist."
+    if not target_driver_info:
+        return f"Driver ID {target_driver_id} does not exist."
+    
+    user_name, user_type, user_subid = user_driver_info
+    target_name, target_type = target_driver_info
+    
+    # Check if both drivers are of the same type
+    if user_type == target_type:
+        return (f"Sorry, {user_name}. You are unable to fill in for {target_name} "
+                f"since you are both {user_type} drivers.")
+    
+    # Check if the user driver is already substituting for another driver
+    if user_subid != 0:
+        # Fetch the name of the driver they are substituting for
+        sql = _conn.execute(f"""
+        SELECT d_drivername
+        FROM driver
+        WHERE d_driverid = {user_subid}
+        """)
+        current_substitute_info = sql.fetchone()
+        current_substitute_name = current_substitute_info[0] if current_substitute_info else "unknown driver"
+        return (f"Sorry, {user_name}. You are unable to fill in for {target_name} "
+                f"since you are already filling in for {current_substitute_name}. "
+                f"Please send a request to update your substitute status if this is a mistake.")
+    
+    # Add the request to the request table (not explicitly defined in schema, assumed as "driver_requests")
+    try:
+        _conn.execute(f"""
+        INSERT INTO driver_requests (requester_id, target_id)
+        VALUES ({user_driver_id}, {target_driver_id})
+        """)
+        _conn.commit()
+    except Exception as e:
+        return f"Failed to send request: {str(e)}"
+    
+    return (f"{user_name}, your request to fill in for {target_name} has been sent successfully. "
+            f"You will be notified shortly if your request has been approved.")
+
+
+def reassignDriver(_conn, substitute_driver_id, target_driver_id):
+    # Fetch the substitute driver's information
+    sql = _conn.execute(f"""
+    SELECT d_drivername, d_subid
+    FROM driver
+    WHERE d_driverid = {substitute_driver_id}
+    """)
+    substitute_driver_info = sql.fetchone()
+
+    # Validate that the substitute driver exists
+    if not substitute_driver_info:
+        return f"Driver ID {substitute_driver_id} does not exist."
+    substitute_name, current_subid = substitute_driver_info
+
+    # Handle reset case: setting d_subid and d_subbusid to 0
+    if target_driver_id == 0:
+        _conn.execute(f"""
+        UPDATE driver
+        SET d_subid = 0, d_subbusid = 0
+        WHERE d_driverid = {substitute_driver_id}
+        """)
+        _conn.commit()
+        return f"Successfully updated {substitute_name}’s schedule to no longer substitute for anyone."
+
+    # Fetch the target driver's information
+    sql = _conn.execute(f"""
+    SELECT d_drivername, d_busid
+    FROM driver
+    WHERE d_driverid = {target_driver_id}
+    """)
+    target_driver_info = sql.fetchone()
+
+    # Validate that the target driver exists
+    if not target_driver_info:
+        return f"Driver ID {target_driver_id} does not exist."
+    target_name, target_busid = target_driver_info
+
+    # Prevent assigning the same substitute to multiple drivers
+    if current_subid != 0 and current_subid != target_driver_id:
+        return (f"Invalid update request: {substitute_name} is already substituting for another driver. "
+                f"Please reset their substitute status before assigning a new driver.")
+
+    # Update the substitute driver's records
+    try:
+        _conn.execute(f"""
+        UPDATE driver
+        SET d_subid = {target_driver_id}, d_subbusid = {target_busid}
+        WHERE d_driverid = {substitute_driver_id}
+        """)
+        _conn.commit()
+    except Exception as e:
+        return f"Failed to update schedule: {str(e)}"
+
+    return f"Successfully updated {substitute_name}’s schedule to substitute for {target_name}."
+
+
+def reassignBus(_conn, old_bus_id, new_bus_id):
+    try:
+        # Validate if the old bus exists in the database
+        old_bus_check = _conn.execute("""
+        SELECT b_busname FROM bus WHERE b_busid = ?
+        """, (old_bus_id,)).fetchone()
+
+        if not old_bus_check:
+            print("Invalid update request: Old bus ID does not exist.")
+            return "Invalid update request."
+
+        # Validate if the new bus exists in the database
+        new_bus_check = _conn.execute("""
+        SELECT b_busname FROM bus WHERE b_busid = ?
+        """, (new_bus_id,)).fetchone()
+
+        if not new_bus_check:
+            print("Invalid update request: Replacement bus ID does not exist.")
+            return "Invalid update request."
+
+        old_bus_name = old_bus_check[0]
+        new_bus_name = new_bus_check[0]
+
+        # Update routes associated with the old bus ID
+        _conn.execute("""
+        UPDATE route
+        SET r_busid = ?
+        WHERE r_busid = ?
+        """, (new_bus_id, old_bus_id))
+
+        # Update drivers assigned to the old bus ID
+        _conn.execute("""
+        UPDATE driver
+        SET d_busid = CASE 
+                        WHEN d_busid = ? THEN ?
+                        ELSE d_busid
+                      END,
+            d_subbusid = CASE 
+                           WHEN d_subbusid = ? THEN ?
+                           ELSE d_subbusid
+                         END
+        WHERE d_busid = ? OR d_subbusid = ?
+        """, (old_bus_id, new_bus_id, old_bus_id, new_bus_id, old_bus_id, old_bus_id))
+
+        print(f"Successfully updated all routes and drivers associated with {old_bus_name} to {new_bus_name}.")
+        return f"Successfully updated all routes and drivers associated with {old_bus_name} to {new_bus_name}."
+
+    except Exception as e:
+        print("An error occurred:", e)
+        return "Invalid update request."
+
+
+def restoreBus(_conn):
+    try:
+        # Clear all current entries in the route table
+        _conn.execute("""
+        DELETE FROM route
+        """)
+
+        # Reinsert default route values into the `route` table
+        default_routes = [
+            (1, 101, 'Full Route', 1, '06:00', '20:00', 'Weekday'),
+            (2, 102, 'Half Route A', 2, '06:00', '20:00', 'Weekday'),
+            (3, 103, 'Half Route B', 3, '06:00', '20:00', 'Weekday')
+        ]  # Example data - adjust this to your schema's default configuration.
+        
+        _conn.executemany("""
+        INSERT INTO route (r_routeid, r_busid, r_routename, r_routetype, r_starttime, r_endtime, r_day)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, default_routes)
+
+        # Reset all drivers to their default bus assignments and clear substitute values
+        _conn.execute("""
+        UPDATE driver
+        SET d_busid = d_driverid + 100,  -- Default assignment logic (e.g., driver ID + offset)
+            d_subid = 0,                -- Reset substitute driver assignment
+            d_subbusid = 0              -- Reset substitute bus assignment
+        """)
+
+        print("Successfully reset routes and drivers to their default assigned buses.")
+        return "Successfully reset routes and drivers to their default assigned buses."
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return "Failed to reset routes and drivers."
+
 
 
 def Q1(_conn):
