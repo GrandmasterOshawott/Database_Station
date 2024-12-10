@@ -70,14 +70,6 @@ def createTable(_conn):
 	s_stopname		char(100) not null);
     """)
 
-    # stopdetails
-    cur.execute("""
-    CREATE TABLE stopdetails(
-	sd_routetype	integer not null,
-	sd_stopid		integer not null,
-	sd_stopno		integer not null);
-    """)
-
     # path_
     cur.execute("""
     CREATE TABLE path_(
@@ -119,7 +111,6 @@ def dropTable(_conn):
     cur.execute("DROP TABLE IF EXISTS driver;")
     cur.execute("DROP TABLE IF EXISTS bus;")
     cur.execute("DROP TABLE IF EXISTS stop;")
-    cur.execute("DROP TABLE IF EXISTS stopdetails;")
     cur.execute("DROP TABLE IF EXISTS path_;")
     cur.execute("DROP TABLE IF EXISTS pathdetails;")
     cur.execute("DROP TABLE IF EXISTS route;")
@@ -198,35 +189,6 @@ def populateTable(_conn):
     (0.1, 0.1, "STOP#18"),
     (0.1, 0.0, "STOP#19"),
     (0.0, 0.0, "STOP#20");
-    """)
-
-    # stopdetails
-    # Full route
-    cur.execute("""
-    INSERT INTO stopdetails (sd_routetype, sd_stopid, sd_stopno)
-    VALUES
-    (1, 1, 0),
-    (1, 2, 1),
-    (1, 3, 2),
-    (1, 4, 5),
-    (1, 5, 6),
-    (1, 6, 7),
-    (1, 7, 8),
-    (1, 8, 9),
-    (1, 9, 10),
-    (1, 10, 11),
-    (1, 12, 13),
-    (1, 13, 14),
-    (1, 14, 15),
-    (1, 15, 16),
-    (1, 16, 17),
-    (1, 17, 18),
-    (1, 8, 19),
-    (1, 5, 20),
-    (1, 18, 21),
-    (1, 19, 22),
-    (1, 20, 23),
-    (1, 1, 24);
     """)
 
     # path
@@ -778,6 +740,47 @@ def Q9(_conn):
     print("++++++++++++++++++++++++++++++++++")
 
 
+def Queries(_conn):
+    Q1(_conn)
+    Q2(_conn)
+    Q3(_conn)
+    Q4(_conn)
+    Q5(_conn)
+    Q6(_conn)
+    Q7(_conn)
+    Q8(_conn)
+    Q9(_conn)
+
+
+# Input loop for testing findRoute
+# The user can enter "stop" to exit
+# Assumes correct inputs only
+def Inputs(_conn):
+    # 1 ends the loop
+    done = 0
+    print("Welcome to Database Station!")
+    while(done != 1):
+        print("Enter a day, or \"stop\" to exit.\nExample inputs: MONDAY, TUESDAY.")
+        day = input()
+
+        # End the loop
+        if (day == "stop"):
+            done = 1
+            return 0
+        else:
+            print("Enter a time.\nExample inputs: 6:12, 18:32.")
+            time = input()
+
+            print("Enter the starting stop.\nExample inputs: 1, 5.")
+            start = input()
+
+            print("Enter the ending stop.\nExample inputs: 1, 5.")
+            end = input()
+
+            findRoute(_conn, start, end, 1, time, day)
+            print("")
+
+
 def main():
     database = r"Checkpoint3-dbase.sqlite3"
 
@@ -789,15 +792,10 @@ def main():
         populateTable(conn)
 
         # Testing function features
-        Q1(conn)
-        Q2(conn)
-        Q3(conn)
-        Q4(conn)
-        Q5(conn)
-        Q6(conn)
-        Q7(conn)
-        Q8(conn)
-        Q9(conn)
+        #Queries(conn)
+
+        # User input
+        Inputs(conn)
 
     closeConnection(conn, database)
 
