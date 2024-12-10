@@ -517,9 +517,11 @@ def updateRefuel(_conn, bus_id):
     if bus_name_:
         bus_name = bus_name_[0][0]
         # Return confirmation message
+        print(f"The bus schedule update: {bus_name} has been refueled.")
         return f"The bus schedule update: {bus_name} has been refueled."
     else:
         # In case the bus ID doesn't exist
+        print("Bus not found. Refueling failed.")
         return "Bus not found. Refueling failed."
 
 
@@ -543,9 +545,11 @@ def updateDriver(_conn, driver_id, status_update):
     if driver_name_:
         driver_name = driver_name_[0][0]
         # Return confirmation message
+        print(f"Successfully updated {driver_name}'s status to {status_update}.")
         return f"Successfully updated {driver_name}'s status to {status_update}."
     else:
         # In case the driver ID doesn't exist
+        print("Driver not found. Status update failed.")
         return "Driver not found. Status update failed."
 
 
@@ -569,9 +573,11 @@ def updateBus(_conn, bus_id, condition_update):
     if bus_name_:
         bus_name = bus_name_[0][0]
         # Return confirmation message
+        print(f"Successfully updated {bus_name}'s condition to {condition_update}.")
         return f"Successfully updated {bus_name}'s condition to {condition_update}."
     else:
         # In case the bus ID doesn't exist
+        print("Bus not found. Condition update failed.")
         return "Bus not found. Condition update failed."
 
 
@@ -607,6 +613,7 @@ def showAlerts(_conn):
         alerts.append("There are no alerts at this time.")
 
     # Return the alerts as a message
+    print("\n".join(alerts))
     return "\n".join(alerts)
 
 
@@ -636,8 +643,10 @@ def showRequests(_conn):
                 substitute_driver_name = substitute_driver[0][0]
                 request_messages.append(f"{driver_name} has requested to fill in for {substitute_driver_name}.")
 
+        print("\n".join(request_messages))
         return "\n".join(request_messages)
     else:
+        print("There are no requests at this time.")
         return "There are no requests at this time."
 
 
@@ -670,18 +679,19 @@ def mySchedule(_conn, driver_id):
     if primary_schedule:
         schedule_output.append("Primary schedule:")
         for record in primary_schedule:
-            driver_name, day, start_time, end_time = record
+            driver_id, day, start_time, end_time = record
             schedule_output.append(f"  - {day}: {start_time} to {end_time}")
     
     # Add substitute schedule details
     if substitute_schedule:
         schedule_output.append("Substitute schedule:")
         for record in substitute_schedule:
-            driver_name, day, start_time, end_time = record
+            driver_id, day, start_time, end_time = record
             schedule_output.append(f"  - {day}: {start_time} to {end_time}")
     
     # Format the final schedule output
     result = f"Your schedule is:\n" + "\n".join(schedule_output)
+    print(result)
     return result
 
 
@@ -887,6 +897,31 @@ def restoreBus(_conn):
         return "Failed to reset routes and drivers."
 
 
+def testFunctions():
+    dbFile = "Checkpoint3-dbase.sqlite3"  # Specify your database filename here
+    conn = openConnection(dbFile)  # Open connection with the database file
+    try:
+        print("Testing updateRefuel...")
+        updateRefuel(conn, 1)  # Assuming '1' is a valid bus ID for testing
+
+        print("Testing updateDriver...")
+        updateDriver(conn, 2, "SICK")  # Update driver with ID 1 to "SICK"
+
+        print("Testing updateBus...")
+        updateBus(conn, 5, "OUT OF GAS")  # Update bus with ID 1 to "DAMAGED"
+
+        print("Testing showAlerts...")
+        showAlerts(conn)  # Display driver and bus alerts
+
+        print("Testing showRequests...")
+        showRequests(conn)  # Display substitution requests
+
+        print("Testing mySchedule...")
+        mySchedule(conn, 1)  # View schedule for driver with ID 1
+    finally:
+        closeConnection(conn, dbFile)
+
+
 
 def Q1(_conn):
     print("++++++++++++++++++++++++++++++++++")
@@ -924,12 +959,8 @@ def main():
         createTable(conn)
         populateTable(conn)
 
-        #Q1(conn)
-        # Calculate distance from stop A to stop B on the full route
-        calculateDistance(conn, 3, 5, 1)
-
     closeConnection(conn, database)
 
 
 if __name__ == '__main__':
-    main()
+    testFunctions()
